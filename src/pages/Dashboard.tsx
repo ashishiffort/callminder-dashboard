@@ -8,6 +8,7 @@ import { Phone, Clock, BarChart3, CheckCircle2 } from "lucide-react";
 import UpcomingCalls from "@/components/dashboard/UpcomingCalls";
 import RecentCalls from "@/components/dashboard/RecentCalls";
 import InsightsSummary from "@/components/dashboard/InsightsSummary";
+import ChatSummary from "@/components/dashboard/ChatSummary";
 
 const Dashboard: React.FC = () => {
   const { balance, calls, parents } = useApp();
@@ -110,7 +111,10 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
         
-        <InsightsSummary />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <ChatSummary />
+          <InsightsSummary />
+        </div>
       </div>
     </AppLayout>
   );

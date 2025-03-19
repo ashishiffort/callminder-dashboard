@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "@/context/AppContext";
 import { Button } from "@/components/ui/button";
@@ -11,25 +11,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { PhoneCall, Heart, CalendarClock, ChevronRight } from "lucide-react";
+import { PhoneCall, Heart, CalendarClock, ChevronRight, LogIn, UserPlus } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { setUser } = useApp();
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
+  const { authUser } = useApp();
   
-  const handleGetStarted = () => {
-    if (email && name) {
-      setUser({
-        name,
-        email,
-      });
-      navigate("/onboarding");
+  useEffect(() => {
+    // If user is already authenticated, redirect to dashboard
+    if (authUser) {
+      navigate("/dashboard");
     }
-  };
+  }, [authUser, navigate]);
 
   const features = [
     {
@@ -53,9 +46,16 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-b from-background to-blue-50">
       <header className="container mx-auto px-4 py-6 flex justify-between items-center">
         <div className="text-2xl font-bold text-primary">CallMinder</div>
-        <Button variant="ghost" onClick={() => navigate("/dashboard")}>
-          Login
-        </Button>
+        <div className="space-x-2">
+          <Button variant="ghost" onClick={() => navigate("/login")}>
+            <LogIn className="mr-2 h-4 w-4" />
+            Login
+          </Button>
+          <Button variant="outline" onClick={() => navigate("/signup")}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Sign Up
+          </Button>
+        </div>
       </header>
 
       <main className="container mx-auto px-4 py-12">
@@ -80,48 +80,21 @@ const Index = () => {
                 </Card>
               ))}
             </div>
+            
+            <div className="pt-4">
+              <Button size="lg" onClick={() => navigate("/signup")}>
+                Get Started
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
           </div>
           
           <div>
-            <Card className="w-full max-w-md mx-auto">
-              <CardHeader>
-                <CardTitle>Get Started</CardTitle>
-                <CardDescription>
-                  Begin your journey to better parent check-ins
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Your Name</Label>
-                  <Input 
-                    id="name" 
-                    placeholder="Enter your name" 
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="Enter your email" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  className="w-full" 
-                  onClick={handleGetStarted}
-                  disabled={!email || !name}
-                >
-                  Get Started
-                  <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
-              </CardFooter>
-            </Card>
+            <img 
+              src="https://images.unsplash.com/photo-1605457867610-e990b283f516?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" 
+              alt="Family connection" 
+              className="rounded-lg shadow-lg w-full"
+            />
           </div>
         </div>
       </main>

@@ -15,6 +15,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -29,24 +31,55 @@ interface UserInfoStepProps {
 }
 
 const UserInfoStep: React.FC<UserInfoStepProps> = ({ onNext }) => {
-  const { user, setUser } = useApp();
+  const { user, setUser, authUser } = useApp();
+  const { toast } = useToast();
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: user?.name || "",
-      email: user?.email || "",
+      email: user?.email || authUser?.email || "",
       retellApiKey: user?.retellApiKey || "",
     },
   });
 
-  const onSubmit = (data: FormValues) => {
-    setUser({
-      name: data.name,
-      email: data.email,
-      retellApiKey: data.retellApiKey,
-    });
-    onNext();
+  const onSubmit = async (data: FormValues) => {
+    if (!authUser) return;
+    
+    try {
+      // Update the user profile in Supabase
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: authUser.id,
+          name: data.name,
+          email: data.email,
+          retell_api_key: data.retellApiKey || null,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (error) throw error;
+
+      // Update local state
+      setUser({
+        name: data.name,
+        email: data.email,
+        retellApiKey: data.retellApiKey,
+      });
+      
+      toast({
+        title: "Profile updated",
+        description: "Your information has been saved successfully.",
+      });
+      
+      onNext();
+    } catch (error: any) {
+      toast({
+        title: "Error saving profile",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -73,8 +106,18 @@ const UserInfoStep: React.FC<UserInfoStepProps> = ({ onNext }) => {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="john@example.com" {...field} />
+                <Input 
+                  type="email" 
+                  placeholder="john@example.com" 
+                  {...field} 
+                  disabled={!!authUser?.email}
+                />
               </FormControl>
+              {authUser?.email && (
+                <FormDescription>
+                  Email is linked to your account and cannot be changed here.
+                </FormDescription>
+              )}
               <FormMessage />
             </FormItem>
           )}
@@ -85,12 +128,13 @@ const UserInfoStep: React.FC<UserInfoStepProps> = ({ onNext }) => {
           name="retellApiKey"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Retell API Key (Optional)</FormLabel>
+              <FormLabel>Retell API Key</FormLabel>
               <FormControl>
                 <Input placeholder="Your Retell API key" {...field} />
               </FormControl>
               <FormDescription>
-                You can add this later in settings if you don't have it now.
+                Your Retell API key is required for making AI calls to your parents.
+                You can add or update this later in settings.
               </FormDescription>
               <FormMessage />
             </FormItem>
